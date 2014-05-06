@@ -192,19 +192,19 @@ def fix_loading_name(name):
 
 def unpack16(s):
     """Convert a packed signed short (2 bytes) to a Python int"""
-    return unpack('h', s)[0]
+    return unpack('<h', s)[0]
 
 def pack16(n):
     """Convert a Python int to a packed signed short (2 bytes)"""
-    return pack('h', n)
+    return pack('<h', n)
 
 def unpack32(s):
     """Convert a packed signed long (4 bytes) to a Python int"""
-    return unpack('l', s)[0]
+    return unpack('<l', s)[0]
 
 def pack32(n):
     """Convert a Python int to a packed signed long (4 bytes)"""
-    return pack('l', n)
+    return pack('<l', n)
 
 
 #----------------------------------------------------------------------
@@ -230,6 +230,9 @@ class Struct(object):
         else:
             %(initbody)s
         %(init_exec)s
+
+    def __repr__(self):
+        return %(reprexpr)s
 
     def __getattribute__(self, name):
         return object.__getattribute__(self, name)
@@ -262,7 +265,7 @@ def _structdef(name, doc, fields, flags=None, init_exec=""):
     extra  = [f for f in fields if f[1] == 'x']
     fields = [f for f in fields if f[1] != 'x']
 
-    fmt = "".join(f[1] for f in fields)
+    fmt = "<" + ("".join(f[1] for f in fields))
     fmtsize = calcsize(fmt)
 
     # properties for easy access to the 'flags' bit field
@@ -298,7 +301,11 @@ def _structdef(name, doc, fields, flags=None, init_exec=""):
             packs.append("self.%s" % f[0])
     packexpr = ("pack(%r, " % fmt) + ', '.join(packs) + ")"
 
+    reprexpr = '"<%s>(%s)" %% (%s)' % (name, " ".join("%s:%%s" % f[0] for f in fields), ", ".join("self.%s" % f[0] for f in fields))
+
     s = _struct_template % locals()
+    
+    #print s
 
     # print s.replace("Struct", name)
     return compile(s, "<struct>", "exec")

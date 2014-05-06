@@ -44,7 +44,7 @@ class Palette:
         if isinstance(colors, list):
             self.colors = colors[:]
         elif isinstance(colors, str):
-            self.colors = [unpack('BBB', colors[i:i+3]) for i in xrange(0,768,3)]
+            self.colors = [unpack('<BBB', colors[i:i+3]) for i in xrange(0,768,3)]
         else:
             raise TypeError, "Argument 'colors' must be list or string"
 

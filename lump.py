@@ -6,7 +6,10 @@
 try:
     import Image, ImageDraw, ImageOps
 except:
-    pass
+    try:
+        from PIL import Image, ImageDraw, ImageOps
+    except:
+        pass
 
 import os
 import omg.palette
@@ -82,7 +85,7 @@ class Graphic(Lump):
 
     def get_offsets(self):
         """Retrieve the (x, y) offsets of the graphic."""
-        return unpack('hh', self.data[4:8])
+        return unpack('<hh', self.data[4:8])
 
     def set_offsets(self, xy):
         """Set the (x, y) offsets of the graphic."""
@@ -90,7 +93,7 @@ class Graphic(Lump):
 
     def get_dimensions(self):
         """Retrieve the (width, height) dimensions of the graphic."""
-        return unpack('hh', self.data[0:4])
+        return unpack('<hh', self.data[0:4])
 
     offsets = property(get_offsets, set_offsets)
     x_offset = property(lambda self: self.offsets[0],
@@ -148,7 +151,7 @@ class Graphic(Lump):
         width, height = self.dimensions
         tran_index = tran_index or self.palette.tran_index
         output = [chr(tran_index)] * (width*height)
-        pointers = unpack('%il'%width, data[8 : 8 + width*4])
+        pointers = unpack('<%il'%width, data[8 : 8 + width*4])
         for x in xrange(width):
             pointer = pointers[x]
             while data[pointer] != '\xff':
@@ -186,7 +189,7 @@ class Graphic(Lump):
         height = min(254, height)
         xoff, yoff = (width // 2)-1, height-5
         if im.mode == "RGB":
-            pixels = join([chr(self.palette.match(unpack('BBB', \
+            pixels = join([chr(self.palette.match(unpack('<BBB', \
                 pixels[i*3:(i+1)*3]))) for i in range(width*height)])
         elif im.mode == 'P':
             srcpal = im.palette.tostring()
@@ -241,9 +244,9 @@ class Graphic(Lump):
         respectively. However, .raw ignores this parameter and always
         writes in palette mode."""
 
-        format = os.path.splitext(filename)[1:].upper()
-        if   format == 'LMP': writefile(filename, self.data)
-        elif format == 'RAW': writefile(filename, self.to_raw())
+        format = os.path.splitext(filename)[1].upper()
+        if   format == '.LMP': writefile(filename, self.data)
+        elif format == '.RAW': writefile(filename, self.to_raw())
         else:
             im = self.to_Image()
             om = im.convert(mode)
