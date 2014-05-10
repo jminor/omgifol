@@ -13,20 +13,20 @@ class Polygon:
     """Not really a polygon. Actually a set of faces that share a texture.
     This is used for floor/ceilings of sectors, which may have disjoint polygons.
     Also used for wall segments which are actually simple polygons."""
-    
+
     def __init__(self, texture=None):
         self.vertices = []
         self.segments = []
         self.texture = texture
         self.faces = []
         self.textureCoords = []
-        
+
     def getFaces(self):
         return self.faces
 
     def getTextureCoords(self):
         return self.textureCoords
-        
+
     def addFace(self, face, textureCoords):
         self.faces.append(face)
         self.textureCoords.append(textureCoords)
@@ -38,7 +38,7 @@ class Polygon:
     def combineSegments(self):
         "Take all line segments we were given and try to combine them into faces."
         v = self.vertices
-        
+
         segs = list(self.segments)
         if len(segs)==0:
             return []
@@ -84,7 +84,7 @@ class Polygon:
 def objmap(wad, name, filename, textureNames, textureSizes):
 
     edit = MapEditor(wad.maps[name])
-    
+
     # first lets get into the proper coordinate system
     for v in edit.vertexes:
         v.x = -v.x
@@ -100,7 +100,7 @@ def objmap(wad, name, filename, textureNames, textureSizes):
         sector.ceil = Polygon(texture=sector.tx_ceil)
 
     for line in edit.linedefs:
-        
+
         p1 = edit.vertexes[line.vx_a]
         p2 = edit.vertexes[line.vx_b]
 
@@ -134,12 +134,12 @@ def objmap(wad, name, filename, textureNames, textureSizes):
                 poly.addFace((front_lower_left,front_lower_right,front_upper_right,front_upper_left), \
                              [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
                 polys.append(poly)
-            
+
             sector1.floor.addSegment(p1, p2, front_lower_left, front_lower_right)
             sector1.ceil.addSegment(p2, p1, front_upper_right, front_upper_left)
-            
+
             vi += 4
-        
+
         if line.back != -1:
             side2 = edit.sidedefs[line.back]
             sector2 = edit.sectors[side2.sector]
@@ -152,7 +152,7 @@ def objmap(wad, name, filename, textureNames, textureSizes):
             vertexes.append((p1.x, sector2.z_ceil,  p1.y)) # upper left
             vertexes.append((p2.x, sector2.z_floor, p2.y)) # lower right
             vertexes.append((p2.x, sector2.z_ceil,  p2.y)) # upper right
-            
+
             if not line.two_sided and side2.tx_mid!='-': #line.impassable:
                 poly = Polygon(side2.tx_mid)
                 height = sector2.z_ceil - sector2.z_floor
@@ -172,7 +172,7 @@ def objmap(wad, name, filename, textureNames, textureSizes):
 
             sector2.floor.addSegment(p2, p1, back_lower_right, back_lower_left)
             sector2.ceil.addSegment(p1, p2, back_upper_left, back_upper_right)
-            
+
             vi += 4
 
         if line.front != -1 and line.back != -1 and line.two_sided:
@@ -212,7 +212,7 @@ def objmap(wad, name, filename, textureNames, textureSizes):
                 poly.addFace((back_upper_left,back_upper_right,front_upper_right,front_upper_left), \
                              [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
                 polys.append(poly)
-        
+
     for sector in edit.sectors:
         for poly in (sector.floor, sector.ceil):
             poly.combineSegments()
@@ -253,16 +253,16 @@ def objmap(wad, name, filename, textureNames, textureSizes):
                 tindexes.append(ti)
                 ti += 1
             out.write("f %s\n" % " ".join(["%s/%s" % (v,t) for v,t in zip(vindexes,tindexes)]))
-        
+
 def writemtl(wad):
     out = open("doom.mtl", "w")
     out.write("# doom.mtl\n")
-    
+
     names = []
     textureSizes = {}
-    
+
     textures = wad.flats.items() # + wad.patches.items() # + wad.graphics.items() + wad.sprites.items()
-    
+
     for name,texture in textures:
         texture.to_file(name+".png")
         out.write("\nnewmtl %s\n" % name)
@@ -276,7 +276,7 @@ Ns 0.000000
         out.write("map_Kd %s.png\n" % name)
 
         names.append(name)
-    
+
     t = Textures(wad.txdefs)
     for name,txdef in t.items():
         image = Image.new('RGB', (txdef.width, txdef.height))
@@ -302,7 +302,7 @@ Ns 0.000000
 """)
         out.write("map_Kd %s.png\n" % name)
         names.append(name)
-    
+
     return names, textureSizes
 
 if len(sys.argv) < 2:
@@ -331,9 +331,9 @@ else:
     print "Loading %s..." % wadfile
     inwad = WAD()
     inwad.from_file(wadfile)
-    
+
     textureNames, textureSizes = writemtl(inwad)
-    
+
     maps = inwad.maps.find(pattern)
     print "Found %d maps matching pattern '%s'" % (len(maps), pattern)
     for name in maps:
