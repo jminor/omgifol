@@ -2,3 +2,8 @@
 *.pyc
 # swap files
 .*.swp
+
+# products
+*.mtl
+*.png
+*.obj
