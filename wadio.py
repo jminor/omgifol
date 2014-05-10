@@ -1,7 +1,7 @@
 import os, md5, time
-from omg.util import *
+from omg import util
 
-Header = make_struct(
+Header = util.make_struct(
   "Header",
   """Class for WAD file headers""",
   [["type",    '4s', "PWAD"],
@@ -9,7 +9,7 @@ Header = make_struct(
    ["dir_ptr", 'l',  12    ]]
 )
 
-Entry = make_struct(
+Entry = util.make_struct(
   "Entry",
   """Class for WAD entries""",
   [["ptr",       'l',  0 ],
@@ -25,9 +25,9 @@ Entry = make_struct(
 
 def open_wad():
     """Open an existing WAD, raise IOError if not found"""
-    if not os.path.exists(location):
+    if not os.path.exists(util.location):
         raise IOError
-    return WadIO(location)
+    return WadIO(util.location)
 
 def create_wad(location):
     """Create a new WAD, raise IOError if exists"""
@@ -117,7 +117,7 @@ class WadIO:
             raise LookupError
         elif isinstance(id, str):
             for i in range(len(self.entries)):
-                if wccmp(self.entries[i].name, id):
+                if util.wccmp(self.entries[i].name, id):
                     return i
             raise LookupError
         raise TypeError
@@ -141,7 +141,7 @@ class WadIO:
         if start is None: start = 0
         if end   is None: end   = len(self.entries)
         return [i for i in range(start, end) if \
-                wccmp(self.entries[i].name, id)]
+                util.wccmp(self.entries[i].name, id)]
 
     def read(self, id):
         """Read an entry and return the data as a binary string."""
@@ -294,4 +294,4 @@ class WadIO:
         s.append("    %s bytes total\n" % str(total))
         for w in wasted:
             s.append("    %i bytes starting at 0x%x\n" % (w[1]-w[0], w[0]))
-        return join(s)
+        return util.join(s)

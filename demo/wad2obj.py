@@ -5,9 +5,10 @@
 # 3D modeling program or modern game engine.
 # Written by Joshua Minor @jminor 2014-05-06
 
-from omg import *
-from omg.txdef import *
+from omg import txdef, wad, mapedit
 import sys, math
+
+from PIL import Image
 
 class Polygon:
     """Not really a polygon. Actually a set of faces that share a texture.
@@ -83,14 +84,12 @@ class Polygon:
 
 def objmap(wad, name, filename, textureNames, textureSizes):
 
-    edit = MapEditor(wad.maps[name])
+    edit = mapedit.MapEditor(wad.maps[name])
 
     # first lets get into the proper coordinate system
     for v in edit.vertexes:
         v.x = -v.x
 
-    floor = 0
-    ceil = 100
     vi = 1  # vertex index (starting at 1 for the 1st vertex)
     vertexes = []
     polys = []
@@ -277,14 +276,14 @@ Ns 0.000000
 
         names.append(name)
 
-    t = Textures(wad.txdefs)
-    for name,txdef in t.items():
-        image = Image.new('RGB', (txdef.width, txdef.height))
+    t = txdef.Textures(wad.txdefs)
+    for name,texture_definition in t.items():
+        image = Image.new('RGB', (texture_definition.width, texture_definition.height))
         # print "making %s at %dx%d" % (name, txdef.width, txdef.height)
-        for patchdef in txdef.patches:
+        for patchdef in texture_definition.patches:
             patchdef.name = patchdef.name.upper() # sometimes there are lower case letters!?
             if patchdef.name not in wad.patches:
-                print "ERROR: Cannot find patch named '%s' for txdef '%s'" % (patchdef.name, name)
+                print "ERROR: Cannot find patch named '%s' for texture_definition '%s'" % (patchdef.name, name)
                 continue
             patch = wad.patches[patchdef.name]
             stamp = patch.to_Image()
@@ -319,7 +318,7 @@ if len(sys.argv) < 2:
 elif len(sys.argv) == 2:
     wadfile = sys.argv[1]
     print "Loading %s..." % wadfile
-    inwad = WAD()
+    inwad = wad.WAD()
     inwad.from_file(wadfile)
     print "%d maps:" % len(inwad.maps)
     for name in inwad.maps.keys():
@@ -329,7 +328,7 @@ else:
     wadfile, pattern = sys.argv[1:]
 
     print "Loading %s..." % wadfile
-    inwad = WAD()
+    inwad = wad.WAD()
     inwad.from_file(wadfile)
 
     textureNames, textureSizes = writemtl(inwad)
@@ -344,11 +343,10 @@ else:
 
 """
 Sample code for debugging...
-from omg import *
-from omg.txdef import *
-w = WAD('doom.wad')
-t = Textures(w.txdefs)
+from omg import wad, txdef, mapedit
+w = wad.WAD('doom.wad')
+t = txdef.Textures(w.txdefs)
 flat = w.flats['FLOOR0_1']
 map = w.maps['E1M1']
-edit = MapEditor(map)
+edit = mapedit.MapEditor(map)
 """

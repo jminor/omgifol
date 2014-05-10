@@ -1,8 +1,6 @@
-from omg.lump import Lump
-from omg.util import *
-from omg.wad import TxdefGroup
+from omg import util, lump, wad
 
-TextureDef = make_struct(
+TextureDef = util.make_struct(
   "TextureDef",
   """Class for texture definitions""",
   [["name",     '8s', "-"],
@@ -14,7 +12,7 @@ TextureDef = make_struct(
   init_exec = "self.patches = []"
 )
 
-PatchDef = make_struct(
+PatchDef = util.make_struct(
   "PatchDef",
   """Class for patches""",
   [["x",      'h',  0],
@@ -28,7 +26,7 @@ PatchDef = make_struct(
 
 # TODO: integrate with textures lump group instead?
 
-class Textures(OrderedDict):
+class Textures(util.OrderedDict):
     """An editor for Doom's TEXTURE1, TEXTURE2 and PNAMES lumps."""
 
     def __init__(self, *args):
@@ -38,7 +36,7 @@ class Textures(OrderedDict):
             Textures(texture1, pnames)
             Textures(txdefs)
         """
-        OrderedDict.__init__(self)
+        util.OrderedDict.__init__(self)
         if len(args):
             self.from_lumps(*args)
 
@@ -55,19 +53,19 @@ class Textures(OrderedDict):
             self._from_lumps(args[0], args[1])
 
     def _from_lumps(self, texture1, pnames):
-        # Unpack PNAMES
-        numdefs = unpack16(pnames.data[0:2])
-        pnames = [zstrip(pnames.data[ptr:ptr+8]) \
+        # util.Unpack PNAMES
+        numdefs = util.unpack16(pnames.data[0:2])
+        pnames = [util.zstrip(pnames.data[ptr:ptr+8]) \
             for ptr in xrange(4, 8*numdefs+4, 8)]
 
-        # Unpack TEXTURE1
+        # util.Unpack TEXTURE1
         data = texture1.data
-        numtextures = unpack('<l', data[0:4])[0]
-        pointers = unpack('<'+('l'*numtextures), data[4:4+numtextures*4])
+        numtextures = util.unpack('<l', data[0:4])[0]
+        pointers = util.unpack('<'+('l'*numtextures), data[4:4+numtextures*4])
         for ptr in pointers:
             texture = TextureDef(bytes=data[ptr:ptr+22])
             for pptr in range(ptr+22, ptr+22+10*texture.npatches, 10):
-                x, y, idn = unpack('<hhh', data[pptr:pptr+6])
+                x, y, idn = util.unpack('<hhh', data[pptr:pptr+6])
                 texture.patches.append(PatchDef(x, y, name=pnames[idn]))
             self[texture.name] = texture
 
@@ -85,8 +83,8 @@ class Textures(OrderedDict):
                     used_pnames[p.name] = len(used_pnames)
                 p.id = used_pnames[p.name]
         pnmap = sorted([(i, name) for (name, i) in used_pnames.iteritems()])
-        pnames = pack32(len(pnmap)) + \
-            ''.join(zpad(safe_name(name)) for i, name in pnmap)
+        pnames = util.pack32(len(pnmap)) + \
+            ''.join(util.zpad(util.safe_name(name)) for i, name in pnmap)
 
         texture1 = []
         pointers = []
@@ -98,17 +96,17 @@ class Textures(OrderedDict):
             pointers.append(ptr)
             ptr += 22 + data.npatches*10
 
-        a = pack32(len(textures))
+        a = util.pack32(len(textures))
         #print "a", len(a)
-        b = ''.join([pack32(p) for p in pointers])
+        b = ''.join([util.pack32(p) for p in pointers])
         #print "b", len(b)
         #print "texture1", type(texture1), len(texture1)
         #print texture1
         c = ''.join(texture1)
         texture1 = ''.join([a, b, c])
 
-        g = TxdefGroup('txdefs', Lump, ['TEXTURE?', 'PNAMES'])
-        g['TEXTURE1'], g['PNAMES'] = Lump(texture1), Lump(pnames)
+        g = wad.TxdefGroup('txdefs', lump.Lump, ['TEXTURE?', 'PNAMES'])
+        g['TEXTURE1'], g['PNAMES'] = lump.Lump(texture1), lump.Lump(pnames)
         return g
 
     def simple(self, name, plump):

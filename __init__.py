@@ -27,7 +27,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 __version__ = '0.2'
 __author__  = 'Fredrik Johansson'
 
-from omg.wadio import *
-from omg.wad import *
-from omg.lump import *
-from omg.mapedit import *
+import wadio
+import wad
+import lump
+import mapedit

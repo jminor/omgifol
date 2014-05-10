@@ -1,11 +1,13 @@
-from omg import *
 import sys
+
+from omg import mapedit, wad
+
 import Image, ImageDraw
 
 def drawmap(wad, name, filename, width, format):
     xsize = width - 8
 
-    edit = MapEditor(wad.maps[name])
+    edit = mapedit.MapEditor(wad.maps[name])
     xmin = ymin = 32767
     xmax = ymax = -32768
     for v in edit.vertexes:
@@ -65,7 +67,7 @@ if (len(sys.argv) < 5):
 else:
 
     print "Loading %s..." % sys.argv[1]
-    inwad = WAD()
+    inwad = wad.WAD()
     inwad.from_file(sys.argv[1])
     width = int(sys.argv[3])
     format = sys.argv[4].upper()
