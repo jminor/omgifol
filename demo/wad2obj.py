@@ -112,10 +112,53 @@ def objmap(wad, name, filename, textureNames, textureSizes):
     vertexes = []
     polys = []
 
-    for sector in edit.sectors:
-        sector.floor = Polygon(texture=sector.tx_floor)
-        sector.ceil = Polygon(texture=sector.tx_ceil)
+    _sectors_with_floor_and_ceil_added(edit.sectors)
 
+    _polygons_with_linedefinitions(edit, vi, vertexes, textureSizes, polys)
+
+    for sector in edit.sectors:
+        for poly in (sector.floor, sector.ceil):
+            poly.combineSegments()
+            polys.append(poly)
+
+    ti = 1  # vertex texture index (starting at 1 for the 1st "vt" statement)
+
+    with open(filename, "w") as out:
+        out.write("# %s\n" % name)
+        out.write("mtllib doom.mtl\n")
+
+        out.write("o %s\n" % name)
+
+        # here are all the vertices - in order, so you can index them (starting at 1)
+        # note that we stretch them to compensate for Doom's non-square pixel display
+        for v in vertexes:
+            out.write("v %g %g %g\n" % (v[0], v[1]*1.2, v[2]))
+
+        polyindex = 0
+        for poly in polys:
+            polyindex += 1
+            if poly.texture:
+                if poly.texture == '-' or poly.texture == 'F_SKY1':
+                    # this was not meant to be rendered
+                    continue
+                out.write("g %s.%d %s\n" % (poly.texture, polyindex, name))
+                if poly.texture not in textureNames:
+                    print "Missing texture", poly.texture
+                    out.write("usemtl None\n")
+                else:
+                    out.write("usemtl %s\n" % poly.texture)
+            else:
+                print "Polygon with no texture?", poly
+                continue
+            for vindexes,textureCoords in zip(poly.getFaces(), poly.getTextureCoords()):
+                tindexes = []
+                for u,v in textureCoords:
+                    out.write("vt %g %g\n" % (u, v))
+                    tindexes.append(ti)
+                    ti += 1
+                out.write("f %s\n" % " ".join(["%s/%s" % (v,t) for v,t in zip(vindexes,tindexes)]))
+
+def _polygons_with_linedefinitions(edit, vi, vertexes, textureSizes, polys):
     for line in edit.linedefs:
 
         p1 = edit.vertexes[line.vx_a]
@@ -230,46 +273,10 @@ def objmap(wad, name, filename, textureNames, textureSizes):
                              [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
                 polys.append(poly)
 
-    for sector in edit.sectors:
-        for poly in (sector.floor, sector.ceil):
-            poly.combineSegments()
-            polys.append(poly)
-
-    ti = 1  # vertex texture index (starting at 1 for the 1st "vt" statement)
-    out = open(filename, "w")
-    out.write("# %s\n" % name)
-    out.write("mtllib doom.mtl\n")
-
-    out.write("o %s\n" % name)
-
-    # here are all the vertices - in order, so you can index them (starting at 1)
-    # note that we stretch them to compensate for Doom's non-square pixel display
-    for v in vertexes:
-        out.write("v %g %g %g\n" % (v[0], v[1]*1.2, v[2]))
-
-    polyindex = 0
-    for poly in polys:
-        polyindex += 1
-        if poly.texture:
-            if poly.texture == '-' or poly.texture == 'F_SKY1':
-                # this was not meant to be rendered
-                continue
-            out.write("g %s.%d %s\n" % (poly.texture, polyindex, name))
-            if poly.texture not in textureNames:
-                print "Missing texture", poly.texture
-                out.write("usemtl None\n")
-            else:
-                out.write("usemtl %s\n" % poly.texture)
-        else:
-            print "Polygon with no texture?", poly
-            continue
-        for vindexes,textureCoords in zip(poly.getFaces(), poly.getTextureCoords()):
-            tindexes = []
-            for u,v in textureCoords:
-                out.write("vt %g %g\n" % (u, v))
-                tindexes.append(ti)
-                ti += 1
-            out.write("f %s\n" % " ".join(["%s/%s" % (v,t) for v,t in zip(vindexes,tindexes)]))
+def _sectors_with_floor_and_ceil_added(sectors):
+    for sector in sectors:
+        sector.floor = Polygon(texture=sector.tx_floor)
+        sector.ceil = Polygon(texture=sector.tx_ceil)
 
 def writemtl(wad):
     out = open("doom.mtl", "w")
