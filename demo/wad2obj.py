@@ -306,42 +306,42 @@ Ns 0.000000
 
     return names, textureSizes
 
-if len(sys.argv) < 2:
-    print "    wad2obj.py convert WAD maps+textures to obj+mtl+png files"
-    print "    Usage:"
-    print "         wad2obj.py source.wad [pattern]"
-    print "    Example:"
-    print "         wad2obj.py doom.wad 'E1*'"
-    print "    Convert all maps whose names match the given pattern (eg E?M4 or MAP*)"
-    print "    to obj files. The output files are automatically named (e.g. MAPNAME.obj)"
-    print "    If pattern is missing, just list the names of the maps in the given wad."
-    print "    Also outputs all textures (flats and walls) to png files."
-    print "    NOTE: All of the output files are written to the current directory."
-elif len(sys.argv) == 2:
-    wadfile = sys.argv[1]
-    print "Loading %s..." % wadfile
-    inwad = wad.WAD()
-    inwad.from_file(wadfile)
-    print "%d maps:" % len(inwad.maps)
-    for name in inwad.maps.keys():
-        print name
-else:
+def main():
+    if len(sys.argv) < 2:
+        print "    wad2obj.py convert WAD maps+textures to obj+mtl+png files"
+        print "    Usage:"
+        print "         wad2obj.py source.wad [pattern]"
+        print "    Example:"
+        print "         wad2obj.py doom.wad 'E1*'"
+        print "    Convert all maps whose names match the given pattern (eg E?M4 or MAP*)"
+        print "    to obj files. The output files are automatically named (e.g. MAPNAME.obj)"
+        print "    If pattern is missing, just list the names of the maps in the given wad."
+        print "    Also outputs all textures (flats and walls) to png files."
+        print "    NOTE: All of the output files are written to the current directory."
+    elif len(sys.argv) == 2:
+        wadfile = sys.argv[1]
+        print "Loading %s..." % wadfile
+        inwad = wad.WAD()
+        inwad.from_file(wadfile)
+        print "%d maps:" % len(inwad.maps)
+        for name in inwad.maps.keys():
+            print name
+    else:
 
-    wadfile, pattern = sys.argv[1:]
+        wadfile, pattern = sys.argv[1:]
 
-    print "Loading %s..." % wadfile
-    inwad = wad.WAD()
-    inwad.from_file(wadfile)
+        print "Loading %s..." % wadfile
+        inwad = wad.WAD()
+        inwad.from_file(wadfile)
 
-    textureNames, textureSizes = writemtl(inwad)
+        textureNames, textureSizes = writemtl(inwad)
 
-    maps = inwad.maps.find(pattern)
-    print "Found %d maps matching pattern '%s'" % (len(maps), pattern)
-    for name in maps:
-        objfile = name+".obj"
-        print "Writing %s" % objfile
-        objmap(inwad, name, objfile, textureNames, textureSizes)
-
+        maps = inwad.maps.find(pattern)
+        print "Found %d maps matching pattern '%s'" % (len(maps), pattern)
+        for name in maps:
+            objfile = name+".obj"
+            print "Writing %s" % objfile
+            objmap(inwad, name, objfile, textureNames, textureSizes)
 
 """
 Sample code for debugging...
@@ -352,3 +352,6 @@ flat = w.flats['FLOOR0_1']
 map = w.maps['E1M1']
 edit = mapedit.MapEditor(map)
 """
+
+if __name__ == "__main__":
+    main()
