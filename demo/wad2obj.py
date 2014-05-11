@@ -1,14 +1,32 @@
 #!/usr/bin/env python
 
-# wad2obj - extracts textures and level geometry from a
-# WAD file into an OBJ file suitable for use in any
-# 3D modeling program or modern game engine.
-# Written by Joshua Minor @jminor 2014-05-06
+__doc__ = """
+wad2obj - extracts textures and level geometry from a WAD file into an OBJ file
+suitable for use in any 3D modeling program or modern game engine.
 
-from omg import txdef, wad, mapedit
-import sys, math
+wad2obj.py convert WAD maps+textures to obj+mtl+png files
+Usage:
+     wad2obj.py source.wad [pattern]
+Example:
+     wad2obj.py doom.wad 'E1*'
+Convert all maps whose names match the given pattern (eg E?M4 or MAP*) to obj
+files. The output files are automatically named (e.g. MAPNAME.obj) If pattern
+is missing, just list the names of the maps in the given wad.  Also outputs all
+textures (flats and walls) to png files.
 
+NOTE: All of the output files are written to the current directory.
+
+Written by Joshua Minor @jminor 2014-05-06
+"""
+
+# python
+import math, argparse
+
+# PIL
 from PIL import Image
+
+# local
+from omg import txdef, wad, mapedit
 
 class Polygon:
     """
@@ -306,42 +324,35 @@ Ns 0.000000
 
     return names, textureSizes
 
+def parse_args():
+    """ parse arguments out of sys.argv """
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+            "-d","--dryrun",action="store_true",default=False,
+            help="dryrun mode - print what *would* be done")
+    parser.add_argument(
+            'filepath', type=str, help='Path to wadfile.')
+    parser.add_argument(
+            '-p','--pattern', type=str, default='*',
+            help="glob of levels to select")
+    return parser.parse_args()
+
 def main():
-    if len(sys.argv) < 2:
-        print "    wad2obj.py convert WAD maps+textures to obj+mtl+png files"
-        print "    Usage:"
-        print "         wad2obj.py source.wad [pattern]"
-        print "    Example:"
-        print "         wad2obj.py doom.wad 'E1*'"
-        print "    Convert all maps whose names match the given pattern (eg E?M4 or MAP*)"
-        print "    to obj files. The output files are automatically named (e.g. MAPNAME.obj)"
-        print "    If pattern is missing, just list the names of the maps in the given wad."
-        print "    Also outputs all textures (flats and walls) to png files."
-        print "    NOTE: All of the output files are written to the current directory."
-    elif len(sys.argv) == 2:
-        wadfile = sys.argv[1]
-        print "Loading %s..." % wadfile
-        inwad = wad.WAD()
-        inwad.from_file(wadfile)
-        print "%d maps:" % len(inwad.maps)
-        for name in inwad.maps.keys():
-            print name
-    else:
+    args = parse_args()
 
-        wadfile, pattern = sys.argv[1:]
+    print "Loading %s..." % args.filepath
+    inwad = wad.WAD()
+    inwad.from_file(args.filepath)
 
-        print "Loading %s..." % wadfile
-        inwad = wad.WAD()
-        inwad.from_file(wadfile)
+    textureNames, textureSizes = writemtl(inwad)
 
-        textureNames, textureSizes = writemtl(inwad)
-
-        maps = inwad.maps.find(pattern)
-        print "Found %d maps matching pattern '%s'" % (len(maps), pattern)
-        for name in maps:
-            objfile = name+".obj"
-            print "Writing %s" % objfile
-            objmap(inwad, name, objfile, textureNames, textureSizes)
+    maps = inwad.maps.find(args.pattern)
+    print "Found %d maps matching pattern '%s'" % (len(maps), args.pattern)
+    for name in maps:
+        objfile = name+".obj"
+        print "Writing %s" % objfile
+        objmap(inwad, name, objfile, textureNames, textureSizes)
 
 """
 Sample code for debugging...
