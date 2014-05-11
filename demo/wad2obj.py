@@ -57,8 +57,9 @@ class Polygon:
         self.segments.append((p1,p2,a,b))
 
     def combineSegments(self):
-        "Take all line segments we were given and try to combine them into faces."
-        v = self.vertices
+        """
+        Take all line segments we were given and try to combine them into faces.
+        """
 
         segs = list(self.segments)
         if len(segs)==0:
@@ -95,12 +96,9 @@ class Polygon:
         # based on their vertex coords in world space.
         # this works well for floors and ceilings.
         # flats are always 64x64 aligned to world coords
-        for chain in chains:
-            txs = []
-            for segment in chain:
-                v = segment[0]
-                txs.append((v.x/64., v.y/64.))
-            self.textureCoords.append(txs)
+        [self.textureCoords.append(
+            [(segment[0].x/64., segment[0].y/64.) for segment in chain])
+            for chain in chains]
 
 def objmap(wad, name, filename, textureNames, textureSizes):
 
@@ -366,3 +364,4 @@ edit = mapedit.MapEditor(map)
 
 if __name__ == "__main__":
     main()
+
