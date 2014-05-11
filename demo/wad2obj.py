@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # wad2obj - extracts textures and level geometry from a
 # WAD file into an OBJ file suitable for use in any
