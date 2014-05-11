@@ -11,9 +11,11 @@ import sys, math
 from PIL import Image
 
 class Polygon:
-    """Not really a polygon. Actually a set of faces that share a texture.
-    This is used for floor/ceilings of sectors, which may have disjoint polygons.
-    Also used for wall segments which are actually simple polygons."""
+    """
+    Not really a polygon. Actually a set of faces that share a texture.
+    This is used for floor/ceilings of sectors, which may have disjoint
+    polygons.  Also used for wall segments which are actually simple polygons.
+    """
 
     def __init__(self, texture=None):
         self.vertices = []
