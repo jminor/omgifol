@@ -114,7 +114,7 @@ def objmap(wad, name, filename, textureNames, textureSizes):
 
     _sectors_with_floor_and_ceil_added(edit.sectors)
 
-    _polygons_with_linedefinitions(edit, vi, vertexes, textureSizes, polys)
+    _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys)
 
     for sector in edit.sectors:
         for poly in (sector.floor, sector.ceil):
@@ -158,7 +158,7 @@ def objmap(wad, name, filename, textureNames, textureSizes):
                     ti += 1
                 out.write("f %s\n" % " ".join(["%s/%s" % (v,t) for v,t in zip(vindexes,tindexes)]))
 
-def _polygons_with_linedefinitions(edit, vi, vertexes, textureSizes, polys):
+def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
     for line in edit.linedefs:
 
         p1 = edit.vertexes[line.vx_a]
