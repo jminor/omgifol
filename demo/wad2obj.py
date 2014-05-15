@@ -194,20 +194,11 @@ def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
             vertexes.append((p2.x, sector1.z_ceil,  p2.y)) # upper right
 
             if not line.two_sided and side1.tx_mid!='-': #line.impassable:
-                poly = Polygon(side1.tx_mid)
-                height = sector1.z_ceil - sector1.z_floor
-                tsize = textureSizes.get(side1.tx_mid, (64,64))
-                tw = width/float(tsize[0])
-                th = height/float(tsize[1])
-                tx = side1.off_x/float(tsize[0])
-                if line.lower_unpeg: # yes, lower_unpeg applies to the tx_mid also
-                    ty = -side1.off_y/float(tsize[1])
-                else:
-                    # middle texture is usually top down
-                    ty = (tsize[1]-height-side1.off_y)/float(tsize[1])
-                poly.addFace((front_lower_left,front_lower_right,front_upper_right,front_upper_left), \
-                             [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
-                polys.append(poly)
+                polys.append(_poly_from_components(
+                        side1, sector1,
+                        textureSizes, width, line,
+                        front_lower_left, front_lower_right,
+                        front_upper_right, front_upper_left))
 
             sector1.floor.addSegment(p1, p2, front_lower_left, front_lower_right)
             sector1.ceil.addSegment(p2, p1, front_upper_right, front_upper_left)
@@ -228,21 +219,11 @@ def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
             vertexes.append((p2.x, sector2.z_ceil,  p2.y)) # upper right
 
             if not line.two_sided and side2.tx_mid!='-': #line.impassable:
-                poly = Polygon(side2.tx_mid)
-                height = sector2.z_ceil - sector2.z_floor
-                tsize = textureSizes[side2.tx_mid]
-                tw = width/float(tsize[0])
-                th = height/float(tsize[1])
-                tx = side2.off_x/float(tsize[0])
-                # ty = side2.off_y/float(tsize[1])
-                if line.lower_unpeg: # yes, lower_unpeg applies to the tx_mid also
-                    ty = -side2.off_y/float(tsize[1])
-                else:
-                    # middle texture is usually top down
-                    ty = (tsize[1]-height-side2.off_y)/float(tsize[1])
-                poly.addFace((back_lower_left,back_lower_right,back_upper_right,back_upper_left), \
-                             [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
-                polys.append(poly)
+                polys.append(_poly_from_components(
+                        side2, sector2,
+                        textureSizes, width, line,
+                        back_lower_left,back_lower_right,
+                        back_upper_right,back_upper_left))
 
             sector2.floor.addSegment(p2, p1, back_lower_right, back_lower_left)
             sector2.ceil.addSegment(p1, p2, back_upper_left, back_upper_right)
@@ -286,6 +267,25 @@ def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
                 poly.addFace((back_upper_left,back_upper_right,front_upper_right,front_upper_left), \
                              [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
                 polys.append(poly)
+
+def _poly_from_components(side1, sector1, textureSizes, width, line,
+    lower_left, lower_right, upper_right, upper_left):
+    poly = Polygon(side1.tx_mid)
+    height = sector1.z_ceil - sector1.z_floor
+    tsize = textureSizes.get(side1.tx_mid, (64,64))
+    tw = width/float(tsize[0])
+    th = height/float(tsize[1])
+    tx = side1.off_x/float(tsize[0])
+    if line.lower_unpeg: # yes, lower_unpeg applies to the tx_mid also
+        ty = -side1.off_y/float(tsize[1])
+    else:
+        # middle texture is usually top down
+        ty = (tsize[1]-height-side1.off_y)/float(tsize[1])
+    poly.addFace(
+            (lower_left, lower_right, upper_right, upper_left),
+            [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
+
+    return poly
 
 def _sectors_with_floor_and_ceil_added(sectors):
     for sector in sectors:
