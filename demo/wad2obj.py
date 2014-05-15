@@ -76,7 +76,10 @@ class Polygon:
         self.textureCoords.append(textureCoords)
 
     def addSegment(self, p1, p2, a, b):
-        "Feed us one line segment at a time, then call combineSegments()"
+        """
+        Feed us one line segment at a time, then call combineSegments()
+        """
+
         self.segments.append((p1,p2,a,b))
 
     def combineSegments(self):
@@ -89,6 +92,7 @@ class Polygon:
             return []
 
         chains = []
+        # @TODO: Why is count computed this way?
         max_count = len(remaining_segments) * 2
         count = 0
         while remaining_segments and count < max_count:
@@ -111,7 +115,6 @@ class Polygon:
             for chain in chains]
 
 def objmap(wad, name, filename, textureNames, textureSizes):
-
     edit = mapedit.MapEditor(wad.maps[name])
 
     # first lets get into the proper coordinate system
@@ -159,7 +162,6 @@ def objmap(wad, name, filename, textureNames, textureSizes):
             if poly.texture not in textureNames:
                 print "Missing texture", poly.texture
                 texture_name = "None"
-
             out.write("usemtl %s\n" % texture_name)
 
             for vindexes,textureCoords in zip(poly.getFaces(), poly.getTextureCoords()):
@@ -168,7 +170,9 @@ def objmap(wad, name, filename, textureNames, textureSizes):
                     out.write("vt %g %g\n" % (u, v))
                     tindexes.append(ti)
                     ti += 1
-                out.write("f %s\n" % " ".join(["%s/%s" % (v,t) for v,t in zip(vindexes,tindexes)]))
+                out.write(
+                        "f %s\n" % " ".join([
+                            "%s/%s" % (v,t) for v,t in zip(vindexes,tindexes)]))
 
 def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
     for line in edit.linedefs:
