@@ -28,6 +28,15 @@ from PIL import Image
 # local
 from omg import txdef, wad, mapedit
 
+# Constants
+DEFAULT_MTL_TEXT = """Ka 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Tr 1.000000
+illum 1
+Ns 0.000000
+"""
+
 def linked_a_chain_from(chains, remaining_segments):
     for chain in chains:
         end = chain[-1]
@@ -294,21 +303,14 @@ def writemtl(wad):
 
     for name,texture in textures:
         texture.to_file(name+".png")
-        out.write("\nnewmtl %s\n" % name)
-        out.write("""Ka 1.000000 1.000000 1.000000
-Kd 1.000000 1.000000 1.000000
-Ks 0.000000 0.000000 0.000000
-Tr 1.000000
-illum 1
-Ns 0.000000
-""")
-        out.write("map_Kd %s.png\n" % name)
-
+        _texture_written_to(out, name)
         names.append(name)
 
     t = txdef.Textures(wad.txdefs)
     for name,texture_definition in t.items():
-        image = Image.new('RGB', (texture_definition.width, texture_definition.height))
+        image = Image.new(
+                'RGB',
+                (texture_definition.width, texture_definition.height))
         # print "making %s at %dx%d" % (name, txdef.width, txdef.height)
         for patchdef in texture_definition.patches:
             patchdef.name = patchdef.name.upper() # sometimes there are lower case letters!?
@@ -321,18 +323,15 @@ Ns 0.000000
         image.save(name+".png")
         textureSizes[name] = image.size
 
-        out.write("\nnewmtl %s\n" % name)
-        out.write("""Ka 1.000000 1.000000 1.000000
-Kd 1.000000 1.000000 1.000000
-Ks 0.000000 0.000000 0.000000
-Tr 1.000000
-illum 1
-Ns 0.000000
-""")
-        out.write("map_Kd %s.png\n" % name)
+        _texture_written_to(out, name)
         names.append(name)
 
     return names, textureSizes
+
+def _texture_written_to(out, name):
+    out.write("\nnewmtl %s\n" % name)
+    out.write(DEFAULT_MTL_TEXT)
+    out.write("map_Kd %s.png\n" % name)
 
 def parse_args():
     """ parse arguments out of sys.argv """
