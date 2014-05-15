@@ -28,6 +28,20 @@ from PIL import Image
 # local
 from omg import txdef, wad, mapedit
 
+def linked_a_chain_from(chains, remaining_segments):
+    for chain in chains:
+        end = chain[-1]
+        # compare the actual coordinates of the start of this segment (segment)
+        # versus the end of the chain (end)
+        for segment in (s for s in remaining_segments if s[1] == end[0]):
+            # they match, so extend this chain
+            chain.append(segment)
+            remaining_segments.remove(segment)
+            return True
+
+    return False
+
+
 class Polygon:
     """
     Not really a polygon. Actually a set of faces that share a texture.
@@ -61,32 +75,19 @@ class Polygon:
         Take all line segments we were given and try to combine them into faces.
         """
 
-        segs = list(self.segments)
-        if len(segs)==0:
+        remaining_segments = list(self.segments)
+        if not remaining_segments:
             return []
-        chains = [[segs.pop()]]
-        length = len(segs)
+
+        chains = []
+        max_count = len(remaining_segments) * 2
         count = 0
-        while len(segs)>0 and count < length*2:
-            found = False
-            for chain in chains:
-                end = chain[-1]
-                for segment in segs:
-                    # compare the actual coordinates of
-                    # the start of this segment (segment)
-                    # versus the end of the chain (end)
-                    if segment[1] == end[0]:
-                        # they match, so extend this chain
-                        chain.append(segment)
-                        segs.remove(segment)
-                        count += 1
-                        found = True
-                        break
-                if found:
-                    break
-            if not found:
-                # start a new chain
-                chains.append([segs.pop()])
+        while remaining_segments and count < max_count:
+            if chains and linked_a_chain_from(chains, remaining_segments):
+                count += 1
+                continue
+
+            chains.append([remaining_segments.pop()])
 
         # grab the vertex indicies for each chain (aka face)
         newFaces = [[segment[2] for segment in chain] for chain in chains]
@@ -126,7 +127,6 @@ def objmap(wad, name, filename, textureNames, textureSizes):
     with open(filename, "w") as out:
         out.write("# %s\n" % name)
         out.write("mtllib doom.mtl\n")
-
         out.write("o %s\n" % name)
 
         # here are all the vertices - in order, so you can index them (starting at 1)
