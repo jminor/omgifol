@@ -3,6 +3,9 @@
 # swap files
 .*.swp
 
+# doom WADs
+*.wad
+
 # products
 *.mtl
 *.png
