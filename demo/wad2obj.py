@@ -137,19 +137,24 @@ def objmap(wad, name, filename, textureNames, textureSizes):
         polyindex = 0
         for poly in polys:
             polyindex += 1
-            if poly.texture:
-                if poly.texture == '-' or poly.texture == 'F_SKY1':
-                    # this was not meant to be rendered
-                    continue
-                out.write("g %s.%d %s\n" % (poly.texture, polyindex, name))
-                if poly.texture not in textureNames:
-                    print "Missing texture", poly.texture
-                    out.write("usemtl None\n")
-                else:
-                    out.write("usemtl %s\n" % poly.texture)
-            else:
+
+            if not poly.texture:
                 print "Polygon with no texture?", poly
                 continue
+
+            if poly.texture == '-' or poly.texture == 'F_SKY1':
+                # this was not meant to be rendered
+                continue
+
+            out.write("g %s.%d %s\n" % (poly.texture, polyindex, name))
+
+            texture_name = poly.texture
+            if poly.texture not in textureNames:
+                print "Missing texture", poly.texture
+                texture_name = "None"
+
+            out.write("usemtl %s\n" % texture_name)
+
             for vindexes,textureCoords in zip(poly.getFaces(), poly.getTextureCoords()):
                 tindexes = []
                 for u,v in textureCoords:
