@@ -143,10 +143,7 @@ def objmap(wad, name, filename, textureNames, textureSizes):
         for v in vertexes:
             out.write("v %g %g %g\n" % (v[0], v[1]*1.2, v[2]))
 
-        polyindex = 0
-        for poly in polys:
-            polyindex += 1
-
+        for polyindex, poly in enumerate(polys):
             if not poly.texture:
                 print "Polygon with no texture?", poly
                 continue
@@ -155,7 +152,8 @@ def objmap(wad, name, filename, textureNames, textureSizes):
                 # this was not meant to be rendered
                 continue
 
-            out.write("g %s.%d %s\n" % (poly.texture, polyindex, name))
+            # polyindex starts at 1, enumerate starts at 0
+            out.write("g %s.%d %s\n" % (poly.texture, polyindex + 1, name))
 
             texture_name = poly.texture
             if poly.texture not in textureNames:
