@@ -141,8 +141,9 @@ def objmap(wad, name, filename, textureNames, textureSizes):
         out.write("mtllib doom.mtl\n")
         out.write("o %s\n" % name)
 
-        # here are all the vertices - in order, so you can index them (starting at 1)
-        # note that we stretch them to compensate for Doom's non-square pixel display
+        # here are all the vertices - in order, so you can index them (starting
+        # at 1) note that we stretch them to compensate for Doom's non-square
+        # pixel display
         for v in vertexes:
             out.write("v %g %g %g\n" % (v[0], v[1]*1.2, v[2]))
 
@@ -164,7 +165,10 @@ def objmap(wad, name, filename, textureNames, textureSizes):
                 texture_name = "None"
             out.write("usemtl %s\n" % texture_name)
 
-            for vindexes,textureCoords in zip(poly.getFaces(), poly.getTextureCoords()):
+            for vindexes,textureCoords in zip(
+                    poly.getFaces(),
+                    poly.getTextureCoords()):
+
                 tindexes = []
                 for u,v in textureCoords:
                     out.write("vt %g %g\n" % (u, v))
@@ -202,8 +206,10 @@ def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
                         front_lower_left, front_lower_right,
                         front_upper_right, front_upper_left))
 
-            sector1.floor.addSegment(p1, p2, front_lower_left, front_lower_right)
-            sector1.ceil.addSegment(p2, p1, front_upper_right, front_upper_left)
+            sector1.floor.addSegment(
+                    p1, p2, front_lower_left, front_lower_right)
+            sector1.ceil.addSegment(
+                    p2, p1, front_upper_right, front_upper_left)
 
             vi += 4
 
@@ -247,13 +253,20 @@ def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
                     ty = (tsize[1]-height-side1.off_y)/float(tsize[1])
                 else:
                     ty = -side1.off_y/float(tsize[1])
-                poly.addFace((front_lower_left,front_lower_right,back_lower_right,back_lower_left), \
-                             [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
+                poly.addFace(
+                        (front_lower_left,front_lower_right,
+                            back_lower_right,back_lower_left),
+                        [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
                 polys.append(poly)
 
             # skip the upper texture if it is '-'
             # also skip the upper if the sectors on both sides have sky ceilings
-            if side1.tx_up != '-' and not (sector1.tx_ceil == 'F_SKY1' and sector2.tx_ceil == 'F_SKY1'):
+            if (
+                    side1.tx_up != '-'
+                    and not (
+                        sector1.tx_ceil == 'F_SKY1'
+                        and sector2.tx_ceil == 'F_SKY1')):
+
                 # ceil1 to ceil2
                 poly = Polygon(side1.tx_up)
                 # the front (sector1) is higher than the back (sector2)
@@ -266,7 +279,9 @@ def _polygons_with_line_definitions(edit, vi, vertexes, textureSizes, polys):
                     ty = (tsize[1]-height-side1.off_y)/float(tsize[1])
                 else:
                     ty = -side1.off_y/float(tsize[1])
-                poly.addFace((back_upper_left,back_upper_right,front_upper_right,front_upper_left), \
+                poly.addFace(
+                        (back_upper_left,back_upper_right,
+                            front_upper_right,front_upper_left), \
                              [(tx,ty),(tw+tx,ty),(tw+tx,th+ty),(tx,th+ty)])
                 polys.append(poly)
 
@@ -301,7 +316,8 @@ def writemtl(wad):
     names = []
     textureSizes = {}
 
-    textures = wad.flats.items() # + wad.patches.items() # + wad.graphics.items() + wad.sprites.items()
+    # + wad.patches.items() # + wad.graphics.items() + wad.sprites.items()
+    textures = wad.flats.items()
 
     for name,texture in textures:
         texture.to_file(name+".png")
@@ -315,9 +331,11 @@ def writemtl(wad):
                 (texture_definition.width, texture_definition.height))
         # print "making %s at %dx%d" % (name, txdef.width, txdef.height)
         for patchdef in texture_definition.patches:
-            patchdef.name = patchdef.name.upper() # sometimes there are lower case letters!?
+            # sometimes there are lower case letters!?
+            patchdef.name = patchdef.name.upper()
             if patchdef.name not in wad.patches:
-                print "ERROR: Cannot find patch named '%s' for texture_definition '%s'" % (patchdef.name, name)
+                print ("ERROR: Cannot find patch named '%s' for "
+                        "texture_definition '%s'" % (patchdef.name, name))
                 continue
             patch = wad.patches[patchdef.name]
             stamp = patch.to_Image()
