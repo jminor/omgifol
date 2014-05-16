@@ -3,7 +3,7 @@
 import sys
 
 # local
-from omg import wad, mapedit
+from omg import wad, mapedit, util
 
 def mirror(map):
     ed = mapedit.MapEditor(map)
@@ -33,7 +33,7 @@ def main(args):
         pattern = "*"
         if (len(args) == 3):
             pattern = args[2]
-        for name in inwad.maps.find(pattern):
+        for name in util.find(inwad.maps,pattern):
             print "Mirroring %s" % name
             outwad.maps[name] = mirror(inwad.maps[name])
         print "Saving %s..." % args[1]

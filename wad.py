@@ -1,12 +1,13 @@
-import os, glob
+import os, glob, collections
+
 from omg import lump, util, palette
 from omg.wadio import WadIO
 
-class LumpGroup(util.OrderedDict):
+class LumpGroup(collections.OrderedDict):
     """A dict-like object for holding a group of lumps"""
 
     def __init__(self, name='data', lumptype=lump.Lump, config=()):
-        util.OrderedDict.__init__(self)
+        collections.OrderedDict.__init__(self)
         self._name   = name
         self.lumptype = lumptype
         self.config = config

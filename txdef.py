@@ -1,3 +1,5 @@
+import collections
+
 from omg import util, lump, wad
 
 TextureDef = util.make_struct(
@@ -26,7 +28,7 @@ PatchDef = util.make_struct(
 
 # TODO: integrate with textures lump group instead?
 
-class Textures(util.OrderedDict):
+class Textures(collections.OrderedDict):
     """An editor for Doom's TEXTURE1, TEXTURE2 and PNAMES lumps."""
 
     def __init__(self, *args):
@@ -36,7 +38,7 @@ class Textures(util.OrderedDict):
             Textures(texture1, pnames)
             Textures(txdefs)
         """
-        util.OrderedDict.__init__(self)
+        collections.OrderedDict.__init__(self)
         if len(args):
             self.from_lumps(*args)
 

@@ -26,7 +26,7 @@ import math, argparse
 from PIL import Image
 
 # local
-from omg import txdef, wad, mapedit
+from omg import txdef, wad, mapedit, util
 
 # Constants
 DEFAULT_MTL_TEXT = """Ka 1.000000 1.000000 1.000000
@@ -358,7 +358,7 @@ def main():
 
     textureNames, textureSizes = writemtl(inwad)
 
-    maps = inwad.maps.find(args.pattern)
+    maps = util.find(inwad.maps, args.pattern)
     print "Found %d maps matching pattern '%s'" % (len(maps), args.pattern)
     for name in maps:
         objfile = name+".obj"

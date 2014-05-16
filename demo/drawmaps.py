@@ -1,6 +1,6 @@
 import sys
 
-from omg import mapedit, wad
+from omg import mapedit, wad, util
 
 import Image, ImageDraw
 
@@ -71,6 +71,6 @@ else:
     inwad.from_file(sys.argv[1])
     width = int(sys.argv[3])
     format = sys.argv[4].upper()
-    for name in inwad.maps.find(sys.argv[2]):
+    for name in util.find(inwad.maps, sys.argv[2]):
         print "Drawing %s" % name
         drawmap(inwad, name, name + "_map" + "." + format.lower(), width, format)
