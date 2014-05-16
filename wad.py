@@ -81,7 +81,6 @@ class MarkerGroup(LumpGroup):
             else:
                 # print name, self.prefix, util.wccmp(name, self.prefix)
                 if util.wccmp(name, self.prefix):
-                    startedwith = name
                     endswith = name.replace("START", "END")
                     inside = True
                     wadio.entries[i].been_read = True
