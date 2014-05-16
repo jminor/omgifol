@@ -159,7 +159,7 @@ class Graphic(Lump):
                     output[op] = data[p]
                     op += width
                 pointer += post_length + 4
-        return util.join(output)
+        return "".join(output)
 
     def to_Image(self):
         """Convert to a PIL Image instance"""
@@ -187,7 +187,7 @@ class Graphic(Lump):
         height = min(254, height)
         xoff, yoff = (width // 2)-1, height-5
         if im.mode == "RGB":
-            pixels = util.join([chr(self.palette.match(util.unpack('<BBB', \
+            pixels = "".join([chr(self.palette.match(util.unpack('<BBB', \
                 pixels[i*3:(i+1)*3]))) for i in range(width*height)])
         elif im.mode == 'P':
             srcpal = im.palette.tostring()
@@ -201,7 +201,7 @@ class Graphic(Lump):
                 else:
                     srcpal = zip(R, G, B)
                 lexicon = [chr(self.palette.match(c)) for c in srcpal]
-                pixels = util.join([lexicon[ord(b)] for b in pixels])
+                pixels = "".join([lexicon[ord(b)] for b in pixels])
             else:
                 # Simply copy pixels. However, make sure to translate
                 # all colors matching the transparency color to the
@@ -258,11 +258,11 @@ class Graphic(Lump):
         lexicon = [chr(pal.match(self.palette.colors[i])) for i in range(256)]
         lexicon[self.palette.tran_index] = chr(pal.tran_index)
         if isinstance(self, Flat):
-            self.data = util.join([lexicon[ord(b)] for b in self.data])
+            self.data = "".join([lexicon[ord(b)] for b in self.data])
         else:
             raw = self.to_raw()
             #raw = raw.replace(chr(self.palette.tran_index), chr(pal.tran_index))
-            self.load_raw(util.join([lexicon[ord(b)] for b in raw]),
+            self.load_raw("".join([lexicon[ord(b)] for b in raw]),
                 self.width, self.height,
                 self.x_offset, self.y_offset)
 

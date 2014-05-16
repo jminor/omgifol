@@ -134,14 +134,14 @@ class MapEditor:
     def to_lumps(self):
         m = NameGroup()
         m["_HEADER_"] = lump.Lump("")
-        m["VERTEXES"] = lump.Lump(util.join([x.pack() for x in self.vertexes]))
-        m["THINGS"  ] = lump.Lump(util.join([x.pack() for x in self.things  ]))
-        m["LINEDEFS"] = lump.Lump(util.join([x.pack() for x in self.linedefs]))
-        m["SIDEDEFS"] = lump.Lump(util.join([x.pack() for x in self.sidedefs]))
-        m["SECTORS" ] = lump.Lump(util.join([x.pack() for x in self.sectors ]))
+        m["VERTEXES"] = lump.Lump("".join([x.pack() for x in self.vertexes]))
+        m["THINGS"  ] = lump.Lump("".join([x.pack() for x in self.things  ]))
+        m["LINEDEFS"] = lump.Lump("".join([x.pack() for x in self.linedefs]))
+        m["SIDEDEFS"] = lump.Lump("".join([x.pack() for x in self.sidedefs]))
+        m["SECTORS" ] = lump.Lump("".join([x.pack() for x in self.sectors ]))
         m["NODES"]    = self.nodes
-        m["SEGS"]     = lump.Lump(util.join([x.pack() for x in self.segs    ]))
-        m["SSECTORS"] = lump.Lump(util.join([x.pack() for x in self.ssectors]))
+        m["SEGS"]     = lump.Lump("".join([x.pack() for x in self.segs    ]))
+        m["SSECTORS"] = lump.Lump("".join([x.pack() for x in self.ssectors]))
         m["BLOCKMAP"] = self.blockmap
         m["REJECT"]   = self.reject
         return m

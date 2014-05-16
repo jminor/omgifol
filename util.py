@@ -107,10 +107,6 @@ class OrderedDict:
 # Miscellaneous convenient function
 #
 
-def join(seq):
-    """Create a joined string out of a list of substrings."""
-    return "".join(seq)
-
 def readfile(source):
     """Read data from a file, return data as a string. Target may
     be a path name string or a file-like object (with a `read` method)."""
@@ -126,18 +122,6 @@ def writefile(target, data):
         open(target,'wb').write(data)
     else:
         target.write(data)
-
-def any(set):
-    for e in set:
-        if e:
-            return True
-    return False
-
-def all(set):
-    for e in set:
-        if not e:
-            return False
-    return True
 
 def inwclist(elem, seq):
     return any(wccmp(elem, x) for x in seq)

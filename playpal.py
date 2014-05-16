@@ -53,7 +53,7 @@ class Playpal:
 
     def to_lump(self):
         """Compile to a Doom-ready PLAYPAL Lump."""
-        return Lump(util.join([p.bytes for p in self.palettes]))
+        return Lump("".join([p.bytes for p in self.palettes]))
 
     def set_base(self, palette=None):
         """Set all palettes to copies of a given Palette object. If the

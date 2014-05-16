@@ -294,4 +294,4 @@ class WadIO:
         s.append("    %s bytes total\n" % str(total))
         for w in wasted:
             s.append("    %i bytes starting at 0x%x\n" % (w[1]-w[0], w[0]))
-        return util.join(s)
+        return "".join(s)
