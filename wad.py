@@ -146,14 +146,12 @@ class NameGroup(LumpGroup):
     def load_wadio(self, wadio):
         """Load all matching lumps that have not already
         been flagged as read from the given WadIO object."""
-        inside = False
-        for i in range(len(wadio.entries)):
-            if wadio.entries[i].been_read:
-                continue
-            name = wadio.entries[i].name
-            if util.inwclist(name, self.names):
-                self[name] = self.lumptype(wadio.read(i))
-                wadio.entries[i].been_read = True
+
+        for i, entry in ((i, e)
+                for (i, e) in enumerate(wadio.entries)
+                if not e.been_read and util.inwclist(e.name, self.names)):
+            self[entry.name] = self.lumptype(wadio.read(i))
+            entry.been_read = True
 
 class TxdefGroup(NameGroup):
     """Group for texture definition lumps"""
