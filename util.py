@@ -3,16 +3,20 @@
     by other Omgifol modules.
 """
 
-from fnmatch import fnmatchcase as wccmp
+import fnmatch
+
 from struct  import pack, unpack, calcsize
 
 _pack = pack
 _unpack = unpack
 
 def find(ordered_dictionary, pattern):
-    """Find all items that match the given pattern (supporting
-    wildcards). Returns a list of keys."""
-    return [k for k in ordered_dictionary.keys() if wccmp(k, pattern)]
+    """
+    Find all items that match the given pattern (supporting wildcards).
+    Returns a list of keys.
+    """
+
+    return [k for k in ordered_dictionary.keys() if fnmatch.fnmatchcase(k, pattern)]
 
 #----------------------------------------------------------------------
 #
@@ -36,7 +40,7 @@ def writefile(target, data):
         target.write(data)
 
 def inwclist(elem, seq):
-    return any(wccmp(elem, x) for x in seq)
+    return any(fnmatch.fnmatchcase(elem, x) for x in seq)
 
 
 #----------------------------------------------------------------------

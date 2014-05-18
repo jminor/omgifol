@@ -1,4 +1,4 @@
-import os, glob, collections
+import os, glob, collections, fnmatch
 
 from omg import lump, util, palette
 from omg.wadio import WadIO
@@ -73,15 +73,15 @@ class MarkerGroup(LumpGroup):
                 continue
             name = wadio.entries[i].name
             if inside:
-                if util.wccmp(name, endswith) or util.wccmp(name, self.abssuffix):
+                if fnmatch.fnmatchcase(name, endswith) or fnmatch.fnmatchcase(name, self.abssuffix):
                     inside = False
                 else:
                     if wadio.entries[i].size != 0:
                         self[name] = self.lumptype(wadio.read(i))
                 wadio.entries[i].been_read = True
             else:
-                # print name, self.prefix, util.wccmp(name, self.prefix)
-                if util.wccmp(name, self.prefix):
+                # print name, self.prefix, fnmatch.fnmatchcase(name, self.prefix)
+                if fnmatch.fnmatchcase(name, self.prefix):
                     endswith = name.replace("START", "END")
                     inside = True
                     wadio.entries[i].been_read = True
@@ -114,7 +114,7 @@ class HeaderGroup(LumpGroup):
             name = wadio.entries[i].name
             added = False
             for head in self.headers:
-                if util.wccmp(name, head):
+                if fnmatch.fnmatchcase(name, head):
                     added = True
                     self[name] = NameGroup()
                     wadio.entries[i].been_read = True

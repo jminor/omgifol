@@ -1,4 +1,5 @@
-import os, md5, time
+import os, md5, time, fnmatch
+
 from omg import util
 
 Header = util.make_struct(
@@ -117,7 +118,7 @@ class WadIO:
             raise LookupError
         elif isinstance(id, str):
             for i in range(len(self.entries)):
-                if util.wccmp(self.entries[i].name, id):
+                if fnmatch.fnmatchcase(self.entries[i].name, id):
                     return i
             raise LookupError
         raise TypeError
@@ -141,7 +142,7 @@ class WadIO:
         if start is None: start = 0
         if end   is None: end   = len(self.entries)
         return [i for i in range(start, end) if \
-                util.wccmp(self.entries[i].name, id)]
+                fnmatch.fnmatchcase(self.entries[i].name, id)]
 
     def read(self, id):
         """Read an entry and return the data as a binary string."""
