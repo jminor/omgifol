@@ -1,9 +1,12 @@
-from sys import argv
-from omg import *
-from omg.mapedit import *
+
+# python
+import sys
+
+# local
+from omg import wad, mapedit, util
 
 def mirror(map):
-    ed = MapEditor(map)
+    ed = mapedit.MapEditor(map)
     for v in ed.vertexes:
         v.x = -v.x
     for l in ed.linedefs:
@@ -24,16 +27,16 @@ def main(args):
         print "    Note: nodes will have to be rebuilt externally.\n"
     else:
         print "Loading %s..." % args[0]
-        inwad = WAD()
-        outwad = WAD()
+        inwad = wad.WAD()
+        outwad = wad.WAD()
         inwad.from_file(args[0])
         pattern = "*"
         if (len(args) == 3):
             pattern = args[2]
-        for name in inwad.maps.find(pattern):
+        for name in util.find(inwad.maps,pattern):
             print "Mirroring %s" % name
             outwad.maps[name] = mirror(inwad.maps[name])
         print "Saving %s..." % args[1]
         outwad.to_file(args[1])
 
-if __name__ == "__main__": main(argv[1:])
+if __name__ == "__main__": main(sys.argv[1:])

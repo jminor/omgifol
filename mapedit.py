@@ -1,23 +1,19 @@
-from omg.util import *
-from omg.lump import *
+from omg import util, lump
 from omg.wad import NameGroup
 
-import omg.lineinfo as lineinfo
-import omg.thinginfo as thinginfo
-
-Vertex = make_struct(
+Vertex = util.make_struct(
   "Vertex", """Represents a map vertex""",
   [["x", "h", 0],
    ["y", "h", 0]]
 )
 
-GLVertex = make_struct(
+GLVertex = util.make_struct(
   "GLVertex", """Represents a map GL vertex""",
   [["x", "l", 0],
    ["y", "l", 0]]
 )
 
-Sidedef = make_struct(
+Sidedef = util.make_struct(
   "Sidedef", """Represents a map sidedef""",
   [["off_x",  'h',  0  ],
    ["off_y",  'h',  0  ],
@@ -27,7 +23,7 @@ Sidedef = make_struct(
    ["sector", 'h',  -1 ]]
 )
 
-Linedef = make_struct(
+Linedef = util.make_struct(
   "Linedef", """Represents a map linedef""",
   [["vx_a",   'h', -1],
    ["vx_b",   'h', -1],
@@ -41,7 +37,7 @@ Linedef = make_struct(
    "block_sound", "invisible", "automap"]
 )
 
-Thing = make_struct(
+Thing = util.make_struct(
   "Thing", """Represents a map thing""",
   [["x",     'h', 0],
    ["y",     'h', 0],
@@ -51,7 +47,7 @@ Thing = make_struct(
   ["easy", "medium", "hard", "deaf", "multiplayer"]
 )
 
-Sector = make_struct(
+Sector = util.make_struct(
   "Sector", """Represents a map sector""",
   [["z_floor",  'h',  0],
    ["z_ceil",   'h',  128],
@@ -62,7 +58,7 @@ Sector = make_struct(
    ["tag",      'h',  0]]
 )
 
-Seg = make_struct(
+Seg = util.make_struct(
   "Seg", """Represents a map seg""",
   [["vx_a",   'h', 0],
    ["vx_b",   'h', 0],
@@ -72,13 +68,13 @@ Seg = make_struct(
    ["offset", 'h', 0]]
 )
 
-SubSector = make_struct(
+SubSector = util.make_struct(
   "SubSector", """Represents a map subsector""",
   [["numsegs", 'h', 0],
    ["seg_a",   'H', 0]]
 )
 
-GLSeg = make_struct(
+GLSeg = util.make_struct(
   "GLSeg", """Represents a map GL seg""",
   [["vx_a",    'h', 0],
    ["vx_b",    'h', 0],
@@ -98,7 +94,7 @@ class MapEditor:
         things        List containing Thing objects"""
 
     def __init__(self, from_lumps=None):
-        """Create new, optionally from a lump group"""
+        """Create new, optionally from a lump.lump group"""
         if from_lumps is not None:
             self.from_lumps(from_lumps)
         else:
@@ -115,7 +111,7 @@ class MapEditor:
         return [class_(bytes=data[i:i+s]) for i in xrange(0,len(data),s)]
 
     def from_lumps(self, lumpgroup):
-        """Load entries from a lump group."""
+        """Load entries from a lump.lump group."""
         m = lumpgroup
         self.vertexes = self._unpack_lump(Vertex,    m["VERTEXES"].data)
         self.sidedefs = self._unpack_lump(Sidedef,   m["SIDEDEFS"].data)
@@ -137,15 +133,15 @@ class MapEditor:
 
     def to_lumps(self):
         m = NameGroup()
-        m["_HEADER_"] = Lump("")
-        m["VERTEXES"] = Lump(join([x.pack() for x in self.vertexes]))
-        m["THINGS"  ] = Lump(join([x.pack() for x in self.things  ]))
-        m["LINEDEFS"] = Lump(join([x.pack() for x in self.linedefs]))
-        m["SIDEDEFS"] = Lump(join([x.pack() for x in self.sidedefs]))
-        m["SECTORS" ] = Lump(join([x.pack() for x in self.sectors ]))
+        m["_HEADER_"] = lump.Lump("")
+        m["VERTEXES"] = lump.Lump("".join([x.pack() for x in self.vertexes]))
+        m["THINGS"  ] = lump.Lump("".join([x.pack() for x in self.things  ]))
+        m["LINEDEFS"] = lump.Lump("".join([x.pack() for x in self.linedefs]))
+        m["SIDEDEFS"] = lump.Lump("".join([x.pack() for x in self.sidedefs]))
+        m["SECTORS" ] = lump.Lump("".join([x.pack() for x in self.sectors ]))
         m["NODES"]    = self.nodes
-        m["SEGS"]     = Lump(join([x.pack() for x in self.segs    ]))
-        m["SSECTORS"] = Lump(join([x.pack() for x in self.ssectors]))
+        m["SEGS"]     = lump.Lump("".join([x.pack() for x in self.segs    ]))
+        m["SSECTORS"] = lump.Lump("".join([x.pack() for x in self.ssectors]))
         m["BLOCKMAP"] = self.blockmap
         m["REJECT"]   = self.reject
         return m
@@ -159,7 +155,7 @@ class MapEditor:
         firsts = len(self.sidedefs)
         if sector  is None: sector  = Sector()
         if sidedef is None: sidedef = Sidedef()
-        self.sectors.append(copy(sector))
+        self.sectors.append(util.copy(sector))
         for i, v in enumerate(vertexes):
             if isinstance(v, tuple):
                 x, y = v
@@ -167,7 +163,7 @@ class MapEditor:
                 x, y = v.x, v.y
             self.vertexes.append(Vertex(x, y))
         for i in range(len(vertexes)):
-            side = copy(sidedef)
+            side = util.copy(sidedef)
             side.sector = len(self.sectors)-1
             self.sidedefs.append(side)
             self.linedefs.append(
@@ -183,21 +179,21 @@ class MapEditor:
             x, y = vx.x, vx.y
             self.vertexes.append(Vertex(x+offset[0], y+offset[1]))
         for line in other.linedefs:
-            z = copy(line)
+            z = util.copy(line)
             z.vx_a += vlen
             z.vx_b += vlen
             if z.front != -1: z.front += ilen
             if z.back != -1: z.back += ilen
             self.linedefs.append(z)
         for side in other.sidedefs:
-            z = copy(side)
+            z = util.copy(side)
             z.sector += slen
             self.sidedefs.append(z)
         for sector in other.sectors:
-            z = copy(sector)
+            z = util.copy(sector)
             self.sectors.append(z)
         for thing in other.things:
-            z = copy(thing)
+            z = util.copy(thing)
             z.x += offset[0]
             z.y += offset[1]
             self.things.append(z)

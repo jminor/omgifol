@@ -47,7 +47,7 @@
 <a name="Using_Omgifol"></a><h2>Using Omgifol</h2>
 <p>At the beginning of an interactive session, or as the first line in a Python script file, enter
 </p>
-<pre> from omg import *
+<pre> from omg import mapedit, wad
 </pre>
 <a name="WAD_objects"></a><h2>WAD objects</h2>
 <p>A <tt >WAD</tt > is an abstract representation of a WAD file. A <tt >WAD</tt > object can load content from a WAD file, or save content to a WAD file, but is entirely memory-resident.
@@ -56,23 +56,23 @@
 <a name="Loading_from_WAD_files"></a><h3>Loading from WAD files</h3>
 <p>The following are all equivalent:
 </p>
-<pre> a = WAD('wadfile.wad')
+<pre> a = wad.WAD('wadfile.wad')
 
- a = WAD(from_file='wadfile.wad')
+ a = wad.WAD(from_file='wadfile.wad')
 
  f = open('wadfile.wad', 'rb')
- a = WAD(from_file=f)
+ a = wad.WAD(from_file=f)
 
- a = WAD()
+ a = wad.WAD()
  a.from_file('wadfile.wad')
 
  f = open('wadfile.wad', 'rb')
- a = WAD()
+ a = wad.WAD()
  a.from_file(f)
 </pre>
 <p>You can load more than one file to the same object:
 </p>
-<pre> a = WAD()
+<pre> a = wad.WAD()
  a.from_file(file1)
  a.from_file(file2)
  a.from_file(file3)

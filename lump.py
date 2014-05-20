@@ -4,17 +4,15 @@
 # in installing PIL just to pass this line if not interested in using the
 # graphics functionality at all.
 try:
-    import Image, ImageDraw, ImageOps
+    import Image
 except:
     try:
-        from PIL import Image, ImageDraw, ImageOps
+        from PIL import Image
     except:
         pass
 
 import os
-import omg.palette
-from omg.util import *
-
+from omg import palette, util
 
 class Lump(object):
     """Basic lump class. Instances of Lump (and its subclasses)
@@ -44,15 +42,15 @@ class Lump(object):
     def from_file(self, source):
         """Load data from a file. Source may be a path name string
         or a file-like object (with a `write` method)."""
-        self.data = readfile(source)
+        self.data = util.readfile(source)
 
     def to_file(self, target):
         """Write data to a file. Target may be a path name string
         or a file-like object (with a `write` method)."""
-        writefile(target, self.data)
+        util.writefile(target, self.data)
 
     def copy(self):
-        return deepcopy(self)
+        return util.deepcopy(self)
 
 
 class Music(Lump):
@@ -79,21 +77,21 @@ class Graphic(Lump):
         .y_offset       -- y offset
     """
 
-    def __init__(self, data=None, from_file=None, palette=None):
-        self.palette = palette or omg.palette.default
+    def __init__(self, data=None, from_file=None, default_palette=None):
+        self.palette = default_palette or palette.default
         Lump.__init__(self, data, from_file)
 
     def get_offsets(self):
         """Retrieve the (x, y) offsets of the graphic."""
-        return unpack('<hh', self.data[4:8])
+        return util.unpack('<hh', self.data[4:8])
 
     def set_offsets(self, xy):
         """Set the (x, y) offsets of the graphic."""
-        self.data = self.data[0:4] + pack('hh', *xy) + self.data[8:]
+        self.data = self.data[0:4] + util.pack('hh', *xy) + self.data[8:]
 
     def get_dimensions(self):
         """Retrieve the (width, height) dimensions of the graphic."""
-        return unpack('<hh', self.data[0:4])
+        return util.unpack('<hh', self.data[0:4])
 
     offsets = property(get_offsets, set_offsets)
     x_offset = property(lambda self: self.offsets[0],
@@ -108,7 +106,7 @@ class Graphic(Lump):
     def from_raw(self, data, width, height, x_offset=0, y_offset=0, pal=None):
         """Load a raw 8-bpp image, converting to the Doom picture format
         (used by all graphics except flats)"""
-        pal = pal or omg.palette.default
+        pal = pal or palette.default
         trans = chr(pal.tran_index)
         # First pass: extract pixel data in column+post format
         columns_in = [data[n:width*height:width] for n in range(width)]
@@ -131,14 +129,14 @@ class Graphic(Lump):
         columnptrs = []
         pointer = 4*width + 8
         for column in columns_out:
-            columnptrs.append(pack('l', pointer))
+            columnptrs.append(util.pack('l', pointer))
             for row, pixels in column:
                 data.append("%c%c\x00%s\x00" % (row, len(pixels), pixels))
                 pointer += 4 + len(pixels)
             data.append('\xff')
             pointer += 1
         # Merge everything together
-        self.data = ''.join([pack('4h', width, height, x_offset, y_offset),
+        self.data = ''.join([util.pack('4h', width, height, x_offset, y_offset),
                     ''.join(columnptrs), ''.join(data)])
 
     def to_raw(self, tran_index=None):
@@ -151,7 +149,7 @@ class Graphic(Lump):
         width, height = self.dimensions
         tran_index = tran_index or self.palette.tran_index
         output = [chr(tran_index)] * (width*height)
-        pointers = unpack('<%il'%width, data[8 : 8 + width*4])
+        pointers = util.unpack('<%il'%width, data[8 : 8 + width*4])
         for x in xrange(width):
             pointer = pointers[x]
             while data[pointer] != '\xff':
@@ -161,7 +159,7 @@ class Graphic(Lump):
                     output[op] = data[p]
                     op += width
                 pointer += post_length + 4
-        return join(output)
+        return "".join(output)
 
     def to_Image(self):
         """Convert to a PIL Image instance"""
@@ -189,7 +187,7 @@ class Graphic(Lump):
         height = min(254, height)
         xoff, yoff = (width // 2)-1, height-5
         if im.mode == "RGB":
-            pixels = join([chr(self.palette.match(unpack('<BBB', \
+            pixels = "".join([chr(self.palette.match(util.unpack('<BBB', \
                 pixels[i*3:(i+1)*3]))) for i in range(width*height)])
         elif im.mode == 'P':
             srcpal = im.palette.tostring()
@@ -198,19 +196,19 @@ class Graphic(Lump):
                 G = [ord(c) for c in srcpal[1::3]]
                 B = [ord(c) for c in srcpal[2::3]]
                 # Work around PIL bug: "RGB" loads as "BGR" from bmps (?)
-                if filename[-4:].lower() == '.bmp':
+                if util.filename[-4:].lower() == '.bmp':
                     srcpal = zip(B, G, R)
                 else:
                     srcpal = zip(R, G, B)
                 lexicon = [chr(self.palette.match(c)) for c in srcpal]
-                pixels = join([lexicon[ord(b)] for b in pixels])
+                pixels = "".join([lexicon[ord(b)] for b in pixels])
             else:
                 # Simply copy pixels. However, make sure to translate
                 # all colors matching the transparency color to the
                 # right index. This is necessary because programs
                 # aren't consistent in choice of position for the
                 # transparent entry.
-                packed_color = pack("BBB", *pal.tran_color)
+                packed_color = util.pack("BBB", *util.pal.tran_color)
                 ri = 0
                 while ri != -1:
                     ri = srcpal.find(packed_color, ri+3)
@@ -225,7 +223,7 @@ class Graphic(Lump):
     def from_file(self, filename, translate=False):
         """Load graphic from an image file."""
         if filename[-4:].lower() == '.lmp':
-            self.data = readfile(filename)
+            self.data = util.readfile(filename)
         else:
             im = Image.open(filename)
             self.from_Image(im, translate)
@@ -245,8 +243,8 @@ class Graphic(Lump):
         writes in palette mode."""
 
         format = os.path.splitext(filename)[1].upper()
-        if   format == '.LMP': writefile(filename, self.data)
-        elif format == '.RAW': writefile(filename, self.to_raw())
+        if   format == '.LMP': util.writefile(filename, self.data)
+        elif format == '.RAW': util.writefile(filename, self.to_raw())
         else:
             im = self.to_Image()
             om = im.convert(mode)
@@ -260,11 +258,11 @@ class Graphic(Lump):
         lexicon = [chr(pal.match(self.palette.colors[i])) for i in range(256)]
         lexicon[self.palette.tran_index] = chr(pal.tran_index)
         if isinstance(self, Flat):
-            self.data = join([lexicon[ord(b)] for b in self.data])
+            self.data = "".join([lexicon[ord(b)] for b in self.data])
         else:
             raw = self.to_raw()
             #raw = raw.replace(chr(self.palette.tran_index), chr(pal.tran_index))
-            self.load_raw(join([lexicon[ord(b)] for b in raw]),
+            self.load_raw("".join([lexicon[ord(b)] for b in raw]),
                 self.width, self.height,
                 self.x_offset, self.y_offset)
 
