@@ -1,26 +1,13 @@
 #!/usr/bin/env python
 
 __doc__ = """
-wad2obj - extracts textures and level geometry from a WAD file into an OBJ file
-suitable for use in any 3D modeling program or modern game engine.
-
-wad2obj.py convert WAD maps+textures to obj+mtl+png files
-Usage:
-     wad2obj.py source.wad [pattern]
-Example:
-     wad2obj.py doom.wad 'E1*'
-Convert all maps whose names match the given pattern (eg E?M4 or MAP*) to obj
-files. The output files are automatically named (e.g. MAPNAME.obj) If pattern
-is missing, just list the names of the maps in the given wad.  Also outputs all
-textures (flats and walls) to png files.
-
-NOTE: All of the output files are written to the current directory.
-
-Written by Joshua Minor @jminor 2014-05-06
+Extracts textures and map geometry from a WAD file into an OBJ file,
+MTL file and PNG files suitable for use in any 3D modeling program or
+modern game engine.
 """
 
 # python
-import math, argparse
+import math, argparse, os, sys
 
 # PIL
 from PIL import Image
@@ -114,13 +101,13 @@ class Polygon:
             [(segment[0].x/64., segment[0].y/64.) for segment in chain])
             for chain in chains]
 
-def objmap(wad, name, filename, textureNames, textureSizes):
+def objmap(wad, name, filename, textureNames, textureSizes, centerVerts):
     edit = mapedit.MapEditor(wad.maps[name])
 
     # first lets get into the proper coordinate system
     v = edit.vertexes[0]
-    bb_min = Vertex(v.x,v.y)
-    bb_max = Vertex(v.x,v.y)
+    bb_min = mapedit.Vertex(v.x,v.y)
+    bb_max = mapedit.Vertex(v.x,v.y)
     for v in edit.vertexes:
         v.x = -v.x
         if bb_max.x > v.x: bb_max.x = v.x
@@ -128,7 +115,10 @@ def objmap(wad, name, filename, textureNames, textureSizes):
         if bb_min.x < v.x: bb_min.x = v.x
         if bb_min.y < v.y: bb_min.y = v.y
 
-    center = Vertex((bb_min.x+bb_max.x)/2, (bb_min.y+bb_max.y)/2)
+    if centerVerts:
+        center = mapedit.Vertex((bb_min.x+bb_max.x)/2, (bb_min.y+bb_max.y)/2)
+    else:
+        center = mapedit.Vertex(0,0)
 
     vi = 1  # vertex index (starting at 1 for the 1st vertex)
     vertexes = []
@@ -365,32 +355,53 @@ def _texture_written_to(out, name):
 def parse_args():
     """ parse arguments out of sys.argv """
 
-    parser = argparse.ArgumentParser(description=__doc__)
+    epilog = "Example: wad2obj.py doom.wad -m 'E1*' -o /tmp"
+
+    parser = argparse.ArgumentParser(description=__doc__, epilog=epilog)
     parser.add_argument(
-            "-d","--dryrun",action="store_true",default=False,
-            help="dryrun mode - print what *would* be done")
+            'source_wad', type=str, help='Path to the input WAD file.')
     parser.add_argument(
-            'filepath', type=str, help='Path to wadfile.')
+            '-l','--list', action='store_true', default=False,
+            help="List the names of the maps in the source wad without exporting anything.")
     parser.add_argument(
-            '-p','--pattern', type=str, default='*',
-            help="glob of levels to select")
+            '-m','--maps', type=str, default='*', metavar='PATTERN',
+            help="Pattern of maps to export (e.g. 'MAP*' or 'E?M1'). Use * as a wildcard or ? as any single character.")
+    parser.add_argument(
+            '-o','--output', type=str, default='.', metavar='PATH',
+            help="Directory path where output files will be written.")
+    parser.add_argument(
+            '-c','--center', action='store_true', default=False,
+            help="Translate the output vertices so the center of the map is at the origin.")
     return parser.parse_args()
 
 def main():
     args = parse_args()
 
-    print "Loading %s..." % args.filepath
+    print "Loading %s..." % args.source_wad
     inwad = wad.WAD()
-    inwad.from_file(args.filepath)
+    inwad.from_file(args.source_wad)
 
+    if args.list:
+        print "Found %d maps:" % len(inwad.maps)
+        for mapName in inwad.maps.keys():
+            print "  %s" % mapName
+        sys.exit(0)
+
+    # lets make sure all output files are written here
+    os.chdir(args.output)
+
+    # export the textures first, so we know all their sizes
     textureNames, textureSizes = writemtl(inwad)
 
-    maps = util.find(inwad.maps, args.pattern)
-    print "Found %d maps matching pattern '%s'" % (len(maps), args.pattern)
-    for name in maps:
-        objfile = name+".obj"
-        print "Writing %s" % objfile
-        objmap(inwad, name, objfile, textureNames, textureSizes)
+    maps = util.find(inwad.maps, args.maps)
+    if len(maps) == 0:
+        print "No maps matching pattern '%s' were found." % (args.maps)
+    else:
+        print "Found %d maps matching pattern '%s'" % (len(maps), args.maps)
+        for name in maps:
+            objfile = name+".obj"
+            print "Writing %s" % objfile
+            objmap(inwad, name, objfile, textureNames, textureSizes, args.center)
 
 """
 Sample code for debugging...
