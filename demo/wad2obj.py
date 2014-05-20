@@ -86,8 +86,17 @@ def objmap(wad, name, filename, textureNames, textureSizes):
     edit = MapEditor(wad.maps[name])
     
     # first lets get into the proper coordinate system
+    v = edit.vertexes[0]
+    bb_min = Vertex(v.x,v.y)
+    bb_max = Vertex(v.x,v.y)
     for v in edit.vertexes:
         v.x = -v.x
+        if bb_max.x > v.x: bb_max.x = v.x
+        if bb_max.y > v.y: bb_max.y = v.y
+        if bb_min.x < v.x: bb_min.x = v.x
+        if bb_min.y < v.y: bb_min.y = v.y
+
+    center = Vertex((bb_min.x+bb_max.x)/2, (bb_min.y+bb_max.y)/2)
 
     floor = 0
     ceil = 100
@@ -228,7 +237,7 @@ def objmap(wad, name, filename, textureNames, textureSizes):
     # here are all the vertices - in order, so you can index them (starting at 1)
     # note that we stretch them to compensate for Doom's non-square pixel display
     for v in vertexes:
-        out.write("v %g %g %g\n" % (v[0], v[1]*1.2, v[2]))
+        out.write("v %g %g %g\n" % (v[0]-center.x, v[1]*1.2, v[2]-center.y))
 
     polyindex = 0
     for poly in polys:
