@@ -1,14 +1,13 @@
-import os, glob
-import omg.palette
-from omg.lump  import *
-from omg.util import *
+import os, glob, collections, fnmatch
+
+from omg import lump, util, palette
 from omg.wadio import WadIO
 
-class LumpGroup(OrderedDict):
+class LumpGroup(collections.OrderedDict):
     """A dict-like object for holding a group of lumps"""
 
-    def __init__(self, name='data', lumptype=Lump, config=()):
-        OrderedDict.__init__(self)
+    def __init__(self, name='data', lumptype=lump.Lump, config=()):
+        collections.OrderedDict.__init__(self)
         self._name   = name
         self.lumptype = lumptype
         self.config = config
@@ -22,7 +21,7 @@ class LumpGroup(OrderedDict):
         section in that WAD is loaded (e.g. if this is a patch
         section, all patches in the WAD will be loaded."""
         iw = WAD(); iw.load(filename)
-        self._lumps += deepcopy(iw.__dict__[self._sect_name]._lumps)
+        self._lumps += util.deepcopy(iw.__dict__[self._sect_name]._lumps)
 
     def to_file(self, filename):
         """Save group as a separate WAD file."""
@@ -32,7 +31,7 @@ class LumpGroup(OrderedDict):
     def from_glob(self, globpattern):
         """Create lumps from files matching the glob pattern."""
         for p in glob.glob(globpattern):
-            name = fixname(os.path.basename(p[:p.rfind('.')]))
+            name = util.fixname(os.path.basename(p[:p.rfind('.')]))
             self[name] = self.lumptype(from_file=p)
 
     def save_wadio(self, wadio):
@@ -74,16 +73,15 @@ class MarkerGroup(LumpGroup):
                 continue
             name = wadio.entries[i].name
             if inside:
-                if wccmp(name, endswith) or wccmp(name, self.abssuffix):
+                if fnmatch.fnmatchcase(name, endswith) or fnmatch.fnmatchcase(name, self.abssuffix):
                     inside = False
                 else:
                     if wadio.entries[i].size != 0:
                         self[name] = self.lumptype(wadio.read(i))
                 wadio.entries[i].been_read = True
             else:
-                # print name, self.prefix, wccmp(name, self.prefix)
-                if wccmp(name, self.prefix):
-                    startedwith = name
+                # print name, self.prefix, fnmatch.fnmatchcase(name, self.prefix)
+                if fnmatch.fnmatchcase(name, self.prefix):
                     endswith = name.replace("START", "END")
                     inside = True
                     wadio.entries[i].been_read = True
@@ -116,12 +114,12 @@ class HeaderGroup(LumpGroup):
             name = wadio.entries[i].name
             added = False
             for head in self.headers:
-                if wccmp(name, head):
+                if fnmatch.fnmatchcase(name, head):
                     added = True
                     self[name] = NameGroup()
                     wadio.entries[i].been_read = True
                     i += 1
-                    while i < numlumps and inwclist(wadio.entries[i].name, self.tail):
+                    while i < numlumps and util.inwclist(wadio.entries[i].name, self.tail):
                         self[name][wadio.entries[i].name] = \
                             self.lumptype(wadio.read(i))
                         wadio.entries[i].been_read = True
@@ -148,22 +146,20 @@ class NameGroup(LumpGroup):
     def load_wadio(self, wadio):
         """Load all matching lumps that have not already
         been flagged as read from the given WadIO object."""
-        inside = False
-        for i in range(len(wadio.entries)):
-            if wadio.entries[i].been_read:
-                continue
-            name = wadio.entries[i].name
-            if inwclist(name, self.names):
-                self[name] = self.lumptype(wadio.read(i))
-                wadio.entries[i].been_read = True
+
+        for i, entry in ((i, e)
+                for (i, e) in enumerate(wadio.entries)
+                if not e.been_read and util.inwclist(e.name, self.names)):
+            self[entry.name] = self.lumptype(wadio.read(i))
+            entry.been_read = True
 
 class TxdefGroup(NameGroup):
     """Group for texture definition lumps"""
     def __init2__(self):
         self.names = ['TEXTURE?', 'PNAMES']
     def __add__(self, other):
-        import omg.txdef
-        a = omg.txdef.Textures()
+        from omg import txdef
+        a = txdef.Textures()
         a.from_lumps(self)
         a.from_lumps(other)
         return a.to_lumps()
@@ -193,18 +189,18 @@ _graphics     = ['TITLEPIC', 'CWILV*', 'WI*', 'M_*',
 # The default structure object.
 # Must be in order: markers first, ['*'] name group last
 defstruct = [
-    [MarkerGroup, 'sprites',   Graphic, 'S'],
-    [MarkerGroup, 'patches',   Graphic, 'P'],
-    [MarkerGroup, 'flats',     Flat,    'F'],
-    [MarkerGroup, 'colormaps', Lump,    'C'],
-    [MarkerGroup, 'ztextures', Graphic, 'TX'],
-    [HeaderGroup, 'maps',   Lump, [_mapheaders, _maptail]],
-    [HeaderGroup, 'glmaps', Lump, [_glmapheaders, _glmaptail]],
-    [NameGroup,   'music',    Music, ['D_*']],
-    [NameGroup,   'sounds',   Sound, ['DS*', 'DP*']],
-    [TxdefGroup,  'txdefs',   Lump,  ['TEXTURE?', 'PNAMES']],
-    [NameGroup,   'graphics', Graphic, _graphics],
-    [NameGroup,   'data',     Lump,  ['*']]
+    [MarkerGroup, 'sprites',   lump.Graphic, 'S'],
+    [MarkerGroup, 'patches',   lump.Graphic, 'P'],
+    [MarkerGroup, 'flats',     lump.Flat,    'F'],
+    [MarkerGroup, 'colormaps', lump.Lump,    'C'],
+    [MarkerGroup, 'ztextures', lump.Graphic, 'TX'],
+    [HeaderGroup, 'maps',   lump.Lump, [_mapheaders, _maptail]],
+    [HeaderGroup, 'glmaps', lump.Lump, [_glmapheaders, _glmaptail]],
+    [NameGroup,   'music',    lump.Music, ['D_*']],
+    [NameGroup,   'sounds',   lump.Sound, ['DS*', 'DP*']],
+    [TxdefGroup,  'txdefs',   lump.Lump,  ['TEXTURE?', 'PNAMES']],
+    [NameGroup,   'graphics', lump.Graphic, _graphics],
+    [NameGroup,   'data',     lump.Lump,  ['*']]
 ]
 
 write_order = ['data', 'colormaps', 'maps', 'glmaps', 'txdefs',
@@ -239,7 +235,7 @@ class WAD:
         section structure. By default, the structure specified in the
         defdata module is used."""
         self.__category = 'root'
-        self.palette = omg.palette.default
+        self.palette = palette.default
         self.structure = structure
         self.groups = []
         for group_def in self.structure:
@@ -289,4 +285,4 @@ class WAD:
         return w
 
     def copy(self):
-        return deepcopy(self)
+        return util.deepcopy(self)

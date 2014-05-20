@@ -1,0 +1,12 @@
+# compiled python files
+*.pyc
+# swap files
+.*.swp
+
+# doom WADs
+*.wad
+
+# products
+*.mtl
+*.png
+*.obj
