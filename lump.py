@@ -164,10 +164,23 @@ class Graphic(Lump):
     def to_Image(self):
         """Convert to a PIL Image instance"""
         im = Image.new('P', self.dimensions, None)
-        if isinstance(self, Flat):
-            im.fromstring(self.data)
-        else:
-            im.fromstring(self.to_raw())
+        try:
+            if isinstance(self, Flat):
+                im.frombytes(self.data)
+            else:
+                im.frombytes(self.to_raw())
+        except AttributeError as ex:
+            # Provide compatibility with old PIL that has fromstring() method
+            # instead of frombytes() method in Image class.
+            if str(ex) == "frombytes":
+                # frombytes() method is indeed missing in Image class
+                if isinstance(self, Flat):
+                    im.fromstring(self.data)
+                else:
+                    im.fromstring(self.to_raw())
+            else:
+                # Another attribute is missing, re-raising the error
+                raise
         im.putpalette(self.palette.save_bytes)
         return im
 
